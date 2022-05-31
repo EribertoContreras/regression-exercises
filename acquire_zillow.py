@@ -31,15 +31,18 @@ def get_zillow_data():
         return pd.read_csv(filename)
     else:
         # read the SQL query into a dataframe
-        df = pd.read_sql("""SELECT bedroomcnt,
-            bathroomcnt,
-            calculatedfinishedsquarefeet,
-            taxvaluedollarcnt,
-            yearbuilt,
-            taxamount,
-            fips
-         FROM properties_2017
-         JOIN  typeconstructiontype """, get_connection('zillow'))
+        df = pd.read_sql("""SELECT 
+             parcelid,
+			 bedroomcnt,
+             bathroomcnt,
+             calculatedfinishedsquarefeet,
+             taxvaluedollarcnt,
+             yearbuilt,
+             taxamount,
+             fips
+          FROM properties_2017
+          JOIN propertylandusetype USING(propertylandusetypeid) 
+          WHERE (propertylandusetypeid = 261) OR (propertylandusetypeid = 279) """, get_connection('zillow'))
 
         # Write that dataframe to disk for later. Called "caching" the data for later.
         df.to_csv(filename, index = False)
@@ -51,9 +54,9 @@ def get_zillow_data():
 
 
 
-def clean_zillow(df):
+#def clean_zillow(df):
 
-     '''Prepares acquired zillow data for exploration'''
+   #  '''Prepares acquired zillow data for exploration'''
     
    # drop column using .drop(columns=column_name)
     #df = df.drop(columns='species_id')
