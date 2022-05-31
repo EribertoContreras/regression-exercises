@@ -1,5 +1,7 @@
-" In my wrangle py"
-
+# In my wrangle.py folder there is a  get_connection(to help us get access to the data set from code up using our Env credentials).
+# get_zillow_data() allows me to import the data and start to visualize it.
+# clean_zillow_data(df) function is created to cut and clean data that could affect future work. 
+# wrangle_zillow() is a function created for the purpose of combining both get_zillow_data and clean_zillow_data.
 
 from cgi import test
 from lib2to3.pgen2.pgen import DFAState
@@ -24,13 +26,14 @@ def get_connection(db, user=env.user, host=env.host, password=env.password):
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_zillow_data():
-    """bedroomcnt, bathroomcnt, calculatedfinishedsquarefeet, taxvaluedollarcnt, yearbuilt, taxamount, and fips"""
+    #in this data set I will be importing (bedroomcnt, bathroomcnt, calculatedfinishedsquarefeet, taxvaluedollarcnt,
+    #  yearbuilt, taxamount, and fips) to allow me to look into zillows single family home data. (which is what we are interested in."""
     filename = "zillow.csv"
 
     if os.path.isfile(filename):
         return pd.read_csv(filename)
     else:
-        # read the SQL query into a dataframe
+        # read the SQL query into a dataframe, 
         df = pd.read_sql("""SELECT parcelid,
              bedroomcnt,
              bathroomcnt,
@@ -42,6 +45,7 @@ def get_zillow_data():
           FROM properties_2017
           JOIN propertylandusetype USING(propertylandusetypeid) 
           WHERE (propertylandusetypeid = 261) OR (propertylandusetypeid = 279) """, get_connection('zillow'))
+            # propertylandusetypeid = 261 and propertylandusetypeid = 279 both are the single family home category, we will be using this data set and join them both using parcelid. 
 
         # Write that dataframe to disk for later. Called "caching" the data for later.
         df.to_csv(filename, index = False)
@@ -53,7 +57,7 @@ def get_zillow_data():
 
 
 
-def clean_zillow(df):
+def clean_zillow_data(df):
     """Prepares acquired zillow data for exploration"""
     # Replace a whitespace sequence or empty with a NaN value and reassign this manipulation to df.
     df = df.replace(r'^\s*$', np.nan, regex=True)
@@ -66,6 +70,13 @@ def clean_zillow(df):
     return df
 
 
+#############################################################################################################################################################
+
+def wrangle_zillow():
+    df = get_zillow_data()
+    df = clean_zillow_data(df)
+    return df
+##############################################################################################################################################################
 # def split_zillow_data(df):
 #     '''
 #     take in a DataFrame and return train, validate, and test DataFrames; stratify on species.
