@@ -5,6 +5,7 @@
 
 from cgi import test
 from lib2to3.pgen2.pgen import DFAState
+from lib2to3.refactor import get_all_fix_names
 import numpy as np
 import seaborn as sns
 import scipy.stats as stats
@@ -54,62 +55,65 @@ def get_zillow_data():
         # Return the dataframe to the calling code
         return df   
 
-
-
+df = get_zillow_data()
+# outlier handling to remove quant_cols with >3.5 z-score (std dev)
+def remove_outliers(threshold, quant_cols, df):
+    z = np.abs((stats.zscore(df[quant_cols])))
+    df_without_outliers=  df[(z < threshold).all(axis=1)]
+    print(df.shape)
+    print(df_without_outliers.shape)
+    return df_without_outliers
 
 def clean_zillow_data(df):
-    """Prepares acquired zillow data for exploration"""
-    # Replace a whitespace sequence or empty with a NaN value and reassign this manipulation to df.
+    """
+    Takes in zillow Dataframe from the get_zillow_data function.
+    Arguments: drops unnecessary columns, 0 value columns, duplicates,
+    and converts select columns from float to int.
+    Returns cleaned data.
+    """
+    # remove empty entries stored as whitespace, convert to nulls
     df = df.replace(r'^\s*$', np.nan, regex=True)
-    # Drop all rows with any Null values, assign to df, and verify.
+    # drop null rows
     df = df.dropna()
-    # Change all column data tyes to int64, reassign to df, and verify.
-    df = df.astype('int')
-    # getting rid of zero values in bedroomcnt and bathroomcnt
-    df = df[(df.bedroomcnt != 0) & (df.bathroomcnt != 0)]
-    return df
+    # drop any duplicate rows
+    df = df.drop_duplicates(keep='first')
+    # convert column types from float to int
+    df = df.astype({'fips': int, 'parcelid': object, 'yearbuilt': int})
+    # remove homes with 0 BR/BD or SQ FT from the final df
+    df = df[(df.bedroomcnt != 0) & (df.bathroomcnt != 0) &
+    (df.calculatedfinishedsquarefeet >= 69)]
+    # remove all rows where any column has z score gtr than 3
+    non_quants = ['yearbuilt', 'fips', 'parcelid']
+    quants = df.drop(columns=non_quants).columns
+    # outlier handling
+    # remove numeric values with > 3.5 std dev
+    df = remove_outliers(3.5, quants, df)
+    return df 
+df = clean_zillow_data(df)
+
+
+def split_zillow_data(df):
+    '''
+    take in a DataFrame and return train, validate, and test DataFrames; stratify on fips.
+    return train, validate, test DataFrames.
+    '''
+        #splits df into train_validate and test using train_test_split() stratifying on fips to get an even mix of each fips
+    train_validate, test = train_test_split(df, test_size=.2, random_state=123)
+    
+        # splits train_validate into train and validate using train_test_split() stratifying on fips to get an even mix of each fips
+    train, validate = train_test_split(train_validate, 
+                                       test_size=.3, 
+                                       random_state=123)
+    return train, validate, test
+
+train, validate, test = split_zillow_data(df)
 
 
 #############################################################################################################################################################
 
-def wrangle_zillow():
-    df = get_zillow_data()
-    df = clean_zillow_data(df)
-    return df
+#def wrangle_zillow():
+   # df = get_zillow_data()
+    #df = clean_zillow_data(df)
+    #return df
+    
 ##############################################################################################################################################################
-# def split_zillow_data(df):
-#     '''
-#     take in a DataFrame and return train, validate, and test DataFrames; stratify on species.
-#     return train, validate, test DataFrames.
-#     '''
-    
-#     # splits df into train_validate and test using train_test_split() stratifying on species to get an even mix of each species
-#     train_validate, test = train_test_split(df, test_size=.2, random_state=123, stratify=df.species)
-    
-#     # splits train_validate into train and validate using train_test_split() stratifying on species to get an even mix of each species
-#     train, validate = train_test_split(train_validate, 
-#                                        test_size=.3, 
-#                                        random_state=123, 
-#                                        stratify=train_validate.species)
-#     return train, validate, test
-
-
-# def prep_zillow(df):
-#     '''Prepares acquired Iris data for exploration'''
-    
-#     # drop column using .drop(columns=column_name)
-#     df = df.drop(columns='species_id')
-    
-#     # remame column using .rename(columns={current_column_name : replacement_column_name})
-#     df = df.rename(columns={'species_name':'species'})
-    
-#     # create dummies dataframe using .get_dummies(column_name,not dropping any of the dummy columns)
-#     dummy_df = pd.get_dummies(df['species'], drop_first=False)
-    
-#     # join original df with dummies df using .concat([original_df,dummy_df], join along the index)
-#     df = pd.concat([df, dummy_df], axis=1)
-    
-#     # split data into train/validate/test using split_data function
-#     train, validate, test = split_iris_data(df)
-    
-#     return train, validate, test
