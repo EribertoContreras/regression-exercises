@@ -88,6 +88,10 @@ def clean_zillow_data(df):
     # outlier handling
     # remove numeric values with > 3.5 std dev
     df = remove_outliers(3.5, quants, df)
+    #df['column name'] = df['column name']. replace(['old value'],'new value')
+    df['fips'] = df['fips'].replace(6037.0, 'Los Angeles,CA')
+    df['fips'] = df['fips'].replace(6059.0, 'Orange,CA')
+    df['fips'] = df['fips'].replace(6111.0, 'Ventura,CA')
     return df 
 df = clean_zillow_data(df)
 
@@ -107,6 +111,27 @@ def split_zillow_data(df):
     return train, validate, test
 
 train, validate, test = split_zillow_data(df)
+
+columns = ['yearbuilt','calculatedfinishedsquarefeet','taxamount','bathroomcnt','bedroomcnt']
+
+def plot_variable_pairs():
+    for col in columns:
+        sns.lmplot(x = col, y='taxvaluedollarcnt', col = 'fips',hue='fips',
+               line_kws= {'color': 'red'},data=train.sample(1000))
+    
+plot_variable_pairs()
+
+columns = ['yearbuilt','calculatedfinishedsquarefeet','taxamount','bathroomcnt','bedroomcnt']
+def plot_categorical_and_continuous_vars():
+    for col in columns:
+        sns.catplot(x='fips', y=col, hue='fips',
+            kind="box", data=train.sample(1000))
+    for col in columns:
+        sns.catplot(x='fips', y= col,kind="violin", data=train.sample(1000)) 
+    for col in columns:
+        sns.catplot(x='fips', y= col,kind="swarm", data=train.sample(1000))
+        
+plot_categorical_and_continuous_vars()
 
 
 #############################################################################################################################################################
