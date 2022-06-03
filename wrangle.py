@@ -124,12 +124,14 @@ plot_variable_pairs()
 columns = ['yearbuilt','calculatedfinishedsquarefeet','taxamount','bathroomcnt','bedroomcnt']
 def plot_categorical_and_continuous_vars():
     for col in columns:
-        sns.catplot(x='fips', y=col, hue='fips',
-            kind="box", data=train.sample(1000))
-    for col in columns:
-        sns.catplot(x='fips', y= col,kind="violin", data=train.sample(1000)) 
-    for col in columns:
-        sns.catplot(x='fips', y= col,kind="swarm", data=train.sample(1000))
+        sns.set(rc={"figure.figsize":(15, 6)})
+        fig, axes = plt.subplots(1,3)
+        
+        sns.boxplot(x='fips', y=col, data=train.sample(1000),ax = axes[0])
+        sns.violinplot(x='fips', y= col, data=train.sample(1000),ax = axes[1]) 
+        sns.swarmplot(x='fips', y= col, data=train.sample(1000),ax = axes[2])
+        
+        plt.show
         
 plot_categorical_and_continuous_vars()
 
