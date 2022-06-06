@@ -16,11 +16,25 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler, QuantileTransformer
 import statsmodels.api as sm
 
-# make sure to identify the actual the predicted and the residuals in your work on you rjupyter notebook.
-# in this case we have copied the definitions from our evaluate.ipynb file 
-# actual = df.taxvaluedollarcnt
-# predicted = df.yhat
-# residuals = actual - predicted
+train = wrangle.train
+df = pd.DataFrame(train[['sqft','taxvaluedollarcnt','yhat']])
+
+y = pd.DataFrame(df.taxvaluedollarcnt)
+X = pd.DataFrame(df.sqft)
+
+baseline = y.mean()
+df['baseline'] = y.taxvaluedollarcnt.mean()
+# turning baseline to int from float
+df.baseline = df.baseline.astype(int)
+# residual = actual - predicted
+df['residual'] = df.taxvaluedollarcnt - df.yhat
+df['baseline_residual'] = df.taxvaluedollarcnt - df.baseline
+
+#make sure to identify the actual the predicted and the residuals in your work on you rjupyter notebook.
+#in this case we have copied the definitions from our evaluate.ipynb file 
+actual = df.taxvaluedollarcnt
+predicted = df.yhat
+residuals = actual - predicted
 
 # Plit_residulas plots the y vS residual, using a scatter plot
 def plot_residuals(actual, predicted):
